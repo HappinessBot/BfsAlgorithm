@@ -4,47 +4,54 @@ import java.util.*;
 
 public class Algorithm {
     private List<Node> visited;
-    private Node node;
+    private Node finalNode;
+    private Node currentNode;
     private Point robot;
 
     public Algorithm() {
         robot = new Point(1,0);
         visited = new ArrayList<>();
-        node = new Node(new int[][] {
+        finalNode = new Node(new int[][] {
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,1,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,1,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0}}, new Point(6,3 ));
-        bfs(new Node(new int[][]{
+        currentNode = new Node(new int[][]{
                 {0,0,0,0,0,0,0,0,0,0,0},
-                {0,1,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0,0},
+                {0,1,0,0,0,1,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
                 {0,0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0,0}}, new Point(1, 1)));
+                {0,0,0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0,0,0}}, new Point(1, 1));
+        List<Node> list = iterate();
+        for (Node node : list) {
+            System.out.println("Robot: " + node.getStartingPoint().toString());
+            System.out.println("Path: " + node.getPath());
+        }
     }
 
     private Node bfs(Node root) {
         Queue<Node> queue = new LinkedList<>();
         queue.add(root);
+        int missingPoints = checkMatrix(root.getData(), finalNode.getData()).size();
 
         while(!queue.isEmpty()) {
             Node currentNode = queue.poll();
+            int pointsLeft = checkMatrix(currentNode.getData(), finalNode.getData()).size();
 
-            if (currentNode.equals(node)) {
-                System.out.println(currentNode.getPath());
+            if (missingPoints > pointsLeft) {
                 return currentNode;
             }
 
@@ -59,6 +66,24 @@ public class Algorithm {
             }
         }
         return null;
+    }
+
+    public void setCurrentNode(Node currentNode) {
+        this.currentNode = currentNode;
+    }
+
+    private List<Node> iterate() {
+        Node temp = currentNode;
+        List<Node> list = new ArrayList<>();
+        List<Point> points = checkMatrix(currentNode.getData(), finalNode.getData());
+        for (int i = 0; i < points.size(); i++) {
+            temp.setRobot(null);
+            temp.setBox(points.get(i));
+            temp = bfs(temp);
+            list.add(temp);
+        }
+        System.out.println(temp.equals(finalNode));
+        return list;
     }
 
     public List<Node> generateMatrix(Node node) {
@@ -81,16 +106,18 @@ public class Algorithm {
             data[node.getBox().getY()][node.getBox().getX()] = 0;
             newNode = new Node(data, new Point(node.getBox().getX() + 1, node.getBox().getY()));
             if(node.getRobot() == null){
+                newNode.setStartingPoint(new Point(node.getBox().getX() - 1, node.getBox().getY()));
                 newNode.modifyPath(node.getPath() + "ff");
                 newNode.setRobotDirection(Possition.RIGHT);
             } else {
+                newNode.setStartingPoint(node.getStartingPoint());
                 if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() < node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflfflff");
-                }else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "f");
-                }else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
+                } else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrffrff");
-                }else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflffflfflff");
                 }
 
@@ -114,16 +141,18 @@ public class Algorithm {
             newNode = new Node(data, new Point(node.getBox().getX() - 1, node.getBox().getY()));
 
             if(node.getRobot() == null){
+                newNode.setStartingPoint(new Point(node.getBox().getX() + 1, node.getBox().getY()));
                 newNode.modifyPath(node.getPath()+"ff");
                 newNode.setRobotDirection(Possition.LEFT);
             } else {
+                newNode.setStartingPoint(node.getStartingPoint());
                 if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() < node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrffrff");
-                }else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrfffrffrff");
-                }else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
+                } else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflfflff");
-                }else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "f");
                 }
 
@@ -153,16 +182,18 @@ public class Algorithm {
             data[node.getBox().getY()][node.getBox().getX()] = 0;
             newNode = new Node(data, new Point(node.getBox().getX(), node.getBox().getY() + 1));
             if(node.getRobot() == null){
+                newNode.setStartingPoint(new Point(node.getBox().getX(), node.getBox().getY() - 1));
                 newNode.modifyPath(node.getPath() + "ff");
                 newNode.setRobotDirection(Possition.DOWN);
             } else {
+                newNode.setStartingPoint(node.getStartingPoint());
                 if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() < node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "f");
-                }else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrfffrff");
-                }else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
+                } else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflffflfflff");
-                }else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflfflff");
                 }
             }
@@ -184,16 +215,18 @@ public class Algorithm {
             newNode = new Node(data, new Point(node.getBox().getX(), node.getBox().getY() - 1));
 
             if(node.getRobot() == null){
+                newNode.setStartingPoint(new Point(node.getBox().getX(), node.getBox().getY() + 1));
                 newNode.modifyPath(node.getPath() + "ff");
                 newNode.setRobotDirection(Possition.UP);
             } else {
+                newNode.setStartingPoint(node.getStartingPoint());
                 if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() < node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrfffrffrff");
-                }else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() < node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "rfflfflff");
-                }else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
+                } else if (node.getRobot().getX() == node.getBox().getX() && node.getRobot().getY() > node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "f");
-                }else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
+                } else if (node.getRobot().getX() > node.getBox().getX() && node.getRobot().getY() == node.getBox().getY()) {
                     newNode.modifyPath(node.getPath() + "lffrffrff");
                 }
             }
@@ -204,4 +237,17 @@ public class Algorithm {
 
         return array;
     }
+
+    private List<Point> checkMatrix(int[][] currentMatrix, int[][] finalMatrix) {
+        List<Point> list = new ArrayList<>();
+        for (int i = 0; i < finalMatrix.length; i++) {
+            for (int j = 0; j < finalMatrix.length; j++) {
+                if (currentMatrix[i][j] != finalMatrix[i][j] && finalMatrix[i][j] != 1) {
+                    list.add(new Point(j, i));
+                }
+            }
+        }
+        return list;
+    }
+
 }

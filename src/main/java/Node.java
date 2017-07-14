@@ -21,6 +21,7 @@ class Node {
     }
 
     private Point robot;
+    private Point startingPoint;
     private Possition robotDirection;
     
     private String path = "";
@@ -53,6 +54,14 @@ class Node {
 
     public int[][] getData() {
         return data;
+    }
+
+    public Point getStartingPoint() {
+        return startingPoint;
+    }
+
+    public void setStartingPoint(Point startingPoint) {
+        this.startingPoint = startingPoint;
     }
 
     @Override
